@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#$ -P bf528
+#$ -cwd 
+#$ -pe omp 16 
+
+source /etc/bashrc
+
+module load gcc/8.3.0 star/2.6.0c
+
+GENOMEDIR=/project/bf528/project_3/reference/rn4_STAR
+STAR --genomeDir $GENOMEDIR --readFilesIn \
+/projectnb/bf528/users/lush_2022/project_3/samples/${1}_1.fastq.gz \
+/projectnb/bf528/users/lush_2022/project_3/samples/${1}_2.fastq.gz \
+--runThreadN 16 --readFilesCommand zcat --outFileNamePrefix \
+/projectnb/bf528/users/lush_2022/project_3/samples/STAR_results/${1}_ --outSAMtype BAM SortedByCoordinate
