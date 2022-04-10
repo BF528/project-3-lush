@@ -8,9 +8,14 @@ Athena Mustakis, Evan Holmes, Navin Ramanan
 
 # Repository Contents
 Files: 
+
+
 multiqc.qsub 
+
 -contains the code necessary to run multiqc, run on the command line in terminal using qsub 
+
 runSTAR.qsub 
+
 -contains the code necessary to run the STAR alignment, run on the command line in terminal using qsub and specify the two samples you will be using 
 
 
