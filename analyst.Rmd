@@ -1,0 +1,484 @@
+---
+title: "Project 3"
+author: "Navin Ramanan"
+date: "4/11/2022"
+output: html_document
+---
+
+# 5. Microarray Differential Expressoin with Limma
+Lead Role: Analyst
+
+limma is a highly mature Bioconductor package that implements the standard analytical methodology for microarray differential expression analysis. The authors used RMA normalization + limma to determine differential expression between the different treatments and control samples. You will generate similar analyses using the pre-normalized expression matrix made available by the authors. You will find the samples that correspond to the sequencing data treatments in the file names /project/bf528/project_3/groups/group_X_mic_info.csv.
+
+The full RMA expression matrix has been made available at /project/bf528/project_3/samples/liver-normalization-rma.txt for your use. Since we have the pre-normalized expression matrix, you will not need to perform normalization or QC yourself and may begin directly with differential expression.
+
+1. Install limma and use it to run differential expression analysis of your samples versus the appropriate controls using the provided RMA normalized expression matrix. Be sure to read the limma documentation for details on how to use the package. We have provided an example R script that implements an limma analysis at /project/bf528/project_3/scripts/run_limma.R for your reference. You will need to change the script to reference your groups samples and the appropriate comparisons. There should be one microarray DE analysis for each of those you produced in 4.3.
+
+2.Write out the differential expression results to files sorted by adjusted p-value as you did in 4.4. Report the number of genes significant at p-adjust < 0.05.
+
+3. Report the top 10 DE genes by p-value in a table for each of your analyses
+
+4. Create histograms of fold change values from the significant DE genes from each of your analyses. Also create scatter plots of fold change vs nominal p-value.
+
+
+Deliverables:
+1. A report of the number of DE genes at p-adjust < 0.05
+2. A table of the top 10 DE genes from each of your analyses
+3. Histograms of fold change values and scatter plots of fold change vs nominal-pvalue from the significant DE genes
+
+
+## Setup
+```{r Packages + setup, }
+source("run_limma.R") # load all our wonderful functions
+knitr::opts_chunk$set(echo = FALSE) # no markdown for you <3
+```
+1. Install limma and use it to run differential expression analysis of your samples versus the appropriate controls using the provided RMA normalized expression matrix. Be sure to read the limma documentation for details on how to use the package. We have provided an example R script that implements an limma analysis at /project/bf528/project_3/scripts/run_limma.R for your reference. You will need to change the script to reference your groups samples and the appropriate comparisons. There should be one microarray DE analysis for each of those you produced in 4.3.
+
+```{r Part5 Read Files}
+# Run limma and return the name of the file with the differential expression results
+# RMA normalized expression matrix
+samples_csv <- '/Users/navinramanan/desktop/bf528/p3/Part5/group_1_mic_info.csv'
+samples <- read_samples_file(samples_csv)
+
+rma_matrix <- '/Users/navinramanan/desktop/bf528/p3/Part5/liver-normalization-rma.txt'
+rma <- read_rma_matrix(rma_matrix)
+
+```
+
+```{r Part5 1 of 4}
+# Run limma and return the name of the file with the differential expression results
+# RMA normalized expression matrix
+sample_subset1 <- c('Control', '3-METHYLCHOLANTHRENE')
+sample_vehicle1 <- samples$vehicle[samples$chemical == '3-METHYLCHOLANTHRENE'][1]
+limma_trmt1_results_file <- generate_limma_results(samples, rma, sample_subset1, sample_vehicle1)
+message(paste0("Limma DE analysis for treatment '3-METHYLCHOLANTHRENE' file name: ", limma_trmt1_results_file))
+
+sample_subset2 <- c('Control', 'CLOTRIMAZOLE')
+sample_vehicle2 <- samples$vehicle[samples$chemical == 'CLOTRIMAZOLE'][1]
+limma_trmt2_results_file <- generate_limma_results(samples, rma, sample_subset2, sample_vehicle2)
+message(paste0("Limma DE analysis for treatment 'CLOTRIMAZOLE' file name: ", limma_trmt2_results_file))
+
+sample_subset3 <- c('Control', 'CHLOROFORM')
+sample_vehicle3 <- samples$vehicle[samples$chemical == 'CHLOROFORM'][1]
+limma_trmt3_results_file <- generate_limma_results(samples, rma, sample_subset3, sample_vehicle3)
+message(paste0("Limma DE analysis for treatment 'CHLOROFORM' file name: ", limma_trmt3_results_file))
+
+
+
+```
+2. Write out the differential expression results to files sorted by adjusted p-value as you did in 4.4. Report the number of genes significant at p-adjust < 0.05.
+
+```{r Part5 2 of 4}
+print('Part5 2 of 4')
+
+# filter rows with padj < padj_threshold
+padj_threshold <- 0.05
+# Treatment 1:
+limma_result1_df <- read_limma_results(limma_trmt1_results_file)
+head(limma_result1_df, 10)
+filtered_limma_result1 <- filter(limma_result1_df, adj.P.Val < padj_threshold)
+significant_padj_genes_1 <- nrow(filtered_limma_result1)
+message(paste0("Number of genes significant at p-adjust < 0.05 for 3ME: ", significant_padj_genes_1))
+
+# Treatment 2:
+limma_result2_df <- read_limma_results(limma_trmt2_results_file)
+head(limma_result2_df, 10)
+filtered_limma_result2 <- filter(limma_result2_df, adj.P.Val < padj_threshold)
+significant_padj_genes_2 <- nrow(filtered_limma_result2)
+message(paste0("Number of genes significant at p-adjust < 0.05 for CLO: ", significant_padj_genes_2))
+
+# Treatment 3:
+limma_result3_df <- read_limma_results(limma_trmt3_results_file)
+head(limma_result3_df, 10)
+filtered_limma_result3 <- filter(limma_result3_df, adj.P.Val < padj_threshold)
+significant_padj_genes_3 <- nrow(filtered_limma_result3)
+message(paste0("Number of genes significant at p-adjust < 0.05 for CHL: ", significant_padj_genes_3))
+
+```
+3. Report the top 10 DE genes by p-value in a table for each of your analyses
+
+```{r Part5 3 of 4}
+
+limma1 <- filtered_limma_result1[order(filtered_limma_result1$P.Value, decreasing = TRUE),]
+head(limma1, 10)
+limma2 <- filtered_limma_result2[order(filtered_limma_result2$P.Value, decreasing = TRUE),]
+head(limma2, 10)
+limma3 <- filtered_limma_result3[order(filtered_limma_result3$P.Value, decreasing = TRUE),]
+head(limma3, 10)
+
+```
+4. Create histograms of fold change values from the significant DE genes from each of your analyses. Also create scatter plots of fold change vs nominal p-value.
+
+```{r Part5 4 of 4}
+
+limma_title1 <- "Histogram of log2FoldChange for (Limma) DE Genes (3ME)"
+fc_hist_plot1 <- FC_hist_plot(filtered_limma_result1, limma_title1)
+fc_hist_plot1
+
+limma_title2 <- "Histogram of log2FoldChange for (Limma) DE Genes (CLO)"
+fc_hist_plot2 <- FC_hist_plot(filtered_limma_result2, limma_title2)
+fc_hist_plot2
+
+limma_title3 <- "Histogram of log2FoldChange for (Limma) DE Genes (CHL)"
+fc_hist_plot3 <- FC_hist_plot(filtered_limma_result3, limma_title3)
+fc_hist_plot3
+
+#scatter plot
+scat_title1 <- "Scatter plot of Fold Change vs Nominal P-Value for top ten DE genes (3ME)"
+scat_plot1 <- DE_scat_plot(filtered_limma_result1, scat_title1)
+scat_plot1
+
+scat_title2 <- "Scatter plot of Fold Change vs Nominal P-Value for top ten DE genes (CLO)"
+scat_plot2 <- DE_scat_plot(filtered_limma_result2, scat_title2)
+scat_plot2
+
+scat_title3 <- "Scatter plot of Fold Change vs Nominal P-Value for top ten DE genes (CHL)"
+scat_plot3 <- DE_scat_plot(filtered_limma_result3, scat_title3)
+scat_plot3
+
+```
+
+### Part 6
+6. Concordance between microarray and RNA-Seq DE genes
+Lead Role: Analyst
+
+The primary finding of the paper was that the concordance of RNA-Seq and microarray expression estimates depends on a number of factors, including biological effect size and gene expression level. Using the differential expression results from both DESeq2 and limma above, you will implement the method used by the paper to measure and examine concordance between platforms.
+
+We have provided example differential expression results from both methods in /project/bf528/project_3/results for you to use until the DESeq2 results come available for your samples.
+
+1. Read the online methods of the paper that describe how concordance was calculated.
+
+2. Implement this concordance method in R or your language of choice. The input should be two sets of DE genes. You will need to figure out how to map Affymetrix probe IDs from the microarray analysis to refSeq identifiers used by the RNA-Seq analysis. We have provided a refSeq-to-probe id mapping in /project/bf528/project_3/refseq_affy_map.csv. Read the paper closely for clues on how the authors accomplished this. A short discussion of the concordance calculation is provided here (Rnotebook).
+
+3. Compute concordance for the significantly DE genes from each of your three analyses.
+
+4. Produce a plot like that in Figure 2a, which plots the concordance vs the number of DE genes from the RNA-Seq analysis. Also plot concordance vs number of DE genes from the microarray analysis.
+
+5. Subdivide the DE genes into “above-median” and “below-median” groups as in Figure 3 b+c for each of your sample groups. Compute the concordance of these separate groups of genes. Use the RNA-Seq results to determine median from the baseMean column in the DESeq2 results, which corresponds to the overall mean count of the gene across all samples in the comparison.
+
+6. Produce a bar plot combining overall concordance measures you obtained for the overall DE gene list and the above- and below-median subsets. Challenge: Try to recreate the figure, by computing concordance for increasing subsets of genes ranked by fold change descending. You will have to decide how to handle the case of having different numbers of DE genes between platforms.
+Deliverables:
+
+1. Concordance between overall, above-, and below-median genes for all three analyses
+2. A plot of overall concordance vs number of DE genes from each analysis
+3. A combined plot of overall, above-, and below-median genes for each of your analyses, and the challenge plot if you so desire
+
+
+```{r Concordance}
+message('Part 6: Concordance')
+#Abbreviations:
+#chemical Name           Abbreviation        MIE/MOA    Filename Ext
+#3-METHYLCHOLANTHRENE     3ME                AHR          data1
+#CLOTRIMAZOLE             CLO                CAR/PXR      data2
+#CHLOROFORM               CHL                CYTOTOX      data3
+
+
+# Import the 3 deseq method files that Evan sent:
+print("Read Deseq2 Files:")
+rna_trmt1 <- read.csv('/Users/navinramanan/desktop/bf528/p3/Part6/ahr.csv',as.is=TRUE)  #3-METHYLCHOLANTHRENE (3ME)
+rna_trmt2 <- read.csv('/Users/navinramanan/desktop/bf528/p3/Part6/car.csv',as.is=TRUE)  #CLOTRIMAZOLE         (CLO)
+rna_trmt3 <- read.csv('/Users/navinramanan/desktop/bf528/p3/Part6/cyto.csv',as.is=TRUE) #CHLOROFORM           (CHL)
+rna_top_genes <- read.csv('/Users/navinramanan/desktop/bf528/p3/Part6/top_genes.csv',as.is=TRUE)
+
+
+# read the 3 limma files:
+mic_trmt1 <- limma_result1_df #3-METHYLCHOLANTHRENE (3ME)
+mic_trmt2 <- limma_result2_df #CLOTRIMAZOLE         (CLO)
+mic_trmt3 <- limma_result3_df #CHLOROFORM           (CHL)
+
+```
+2. Implement this concordance method in R or your language of choice. The input should be two sets of DE genes. You will need to figure out how to map Affymetrix probe IDs from the microarray analysis to refSeq identifiers used by the RNA-Seq analysis. We have provided a refSeq-to-probe id mapping in /project/bf528/project_3/refseq_affy_map.csv. Read the paper closely for clues on how the authors accomplished this. A short discussion of the concordance calculation is provided here (Rnotebook).
+```{r Part6 2 of 6}
+refseq_affy_map <- read.csv('/Users/navinramanan/desktop/bf528/p3/Part6/refseq_affy_map.csv', as.is=TRUE)
+pval_threshold <- 0.05
+
+rna_data1 <- filter(rna_trmt1, pvalue < pval_threshold)
+rna_data2 <- filter(rna_trmt2, pvalue < pval_threshold)
+rna_data3 <- filter(rna_trmt3, pvalue < pval_threshold)
+
+mic_data1 <- filter(mic_trmt1, P.Value < pval_threshold)
+mic_data2 <- filter(mic_trmt2, P.Value < pval_threshold)
+mic_data3 <- filter(mic_trmt3, P.Value < pval_threshold)
+# Map probeids to refseq using refseq_affy_map.csv
+mic_data1 <- probeid_mapping(mic_data1, refseq_affy_map)
+mic_data2 <- probeid_mapping(mic_data2, refseq_affy_map)
+mic_data3 <- probeid_mapping(mic_data3, refseq_affy_map)
+
+# Now convert REFseq to genes:
+# For the microarray data, that is in the column $REFSEQ, 
+# And for the RNA data, that is in the column $X  
+mic_degs1 <- refseq_to_gene(mic_data1$REFSEQ, refseq_affy_map)
+mic_degs2 <- refseq_to_gene(mic_data2$REFSEQ, refseq_affy_map)
+mic_degs3 <- refseq_to_gene(mic_data3$REFSEQ, refseq_affy_map)
+message(paste0("Number of micro array DE genes (3ME): ", length(mic_degs1)))
+message(paste0("Number of micro array DE genes (CLO): ", length(mic_degs2)))
+message(paste0("Number of micro array DE genes (CHL): ", length(mic_degs3)))
+
+rna_degs1 <- refseq_to_gene(rna_data1$X, refseq_affy_map)
+rna_degs2 <- refseq_to_gene(rna_data2$X, refseq_affy_map)
+rna_degs3 <- refseq_to_gene(rna_data3$X, refseq_affy_map)
+message(paste0("Number of rna DE genes (3ME): ", length(rna_degs1)))
+message(paste0("Number of rna DE genes (CLO): ", length(rna_degs2)))
+message(paste0("Number of rna DE genes (CHL): ", length(rna_degs3)))
+
+#Find the genes that have the same DE directionality.
+agree1 <- agreement(mic_data1, rna_data1)
+agree2 <- agreement(mic_data2, rna_data2)
+agree3 <- agreement(mic_data3, rna_data3)
+message(paste0("Number of genes that have the same DE directionality (3ME): "), length(agree1))
+message(paste0("Number of genes that have the same DE directionality (CLO): "), length(agree2))
+message(paste0("Number of genes that have the same DE directionality (CHL): "), length(agree3))
+
+```
+
+
+3. Compute concordance for the significantly DE genes from each of your three analyses.
+
+Supplement:
+For the concordance calculation, you may check the instruction here: https://bitbucket.org/bucab/bf528/src/master/content/projects/project_3_rnaseq_2/.
+
+In summary, for each treatment(toxin), you have “n1 number of DE genes from DESeq (RNAseq) analysis” and “n2 number of DE genes from limma (microarray) analysis”.
+
+In section 6.3, use the formula provided in the instruction to compute a concordance score. You have one concordance score for each treatment (toxin).
+
+```{r Part6 3 of 6}
+
+# Calculate concordance from the number of genes in  RNA & and mic, the number of genes that  agree across those, and the total number of genes in the genome (30000)
+
+N  <-  30000    #total number of genes in the genome (30000)
+n1 <-  length(rna_degs1)  #number of genes in RNA for (3ME)
+n2 <-  length(mic_degs1)  #number of genes in Mic for (3ME)
+n0 <-  length(agree1)    #genes that have the same DE directionality for (3ME)
+concord_score1 <- calculate_concordance_score(n0, n1, n2, N)
+
+n1 <-  length(rna_degs2) #number of genes in RNA for (CLO)
+n2 <-  length(mic_degs2) #number of genes in Mic for (CLO)
+n0 <-  length(agree2)    #genes that have the same DE directionality for (CLO)
+concord_score2 <- calculate_concordance_score(n0, n1, n2, N)
+
+n1 <-  length(rna_degs3) #number of genes in RNA for (CHL)
+n2 <-  length(mic_degs3) #number of genes in Mic for (CHL)
+n0 <-  length(agree3)    #genes that have the same DE directionality for (CHL)
+
+concord_score3 <- calculate_concordance_score(n0, n1, n2, N)
+message(paste0("Concordance Score for (3ME): "), concord_score1)
+message(paste0("Concordance Score for (CLO): "), concord_score2)
+message(paste0("Concordance Score for (CHL): "), concord_score3)
+
+
+```
+4. Produce a plot like that in Figure 2a, which plots the concordance vs the number of DE genes from the RNA-Seq analysis. Also plot concordance vs number of DE genes from the microarray analysis.
+
+Supplement:
+In section 6.4, you plot 2 plots (or 1, if you can make the legends clear) : the concordance score vs the number of DE genes from RNAseq and the number of DE genes from limma. The plots will be similar to Fig 2a in the paper, but Fig 2a is plotting all toxins, while you have only 3 toxins (or, less than 3. when the number of DE genes is too low, you may not obtain a concordance score).
+
+
+```{r Part6 4 of 6}
+
+
+# concordance score vs the number of DE genes  from limma.
+mic_de1 <- length(mic_degs1)
+mic_de2 <- length(mic_degs2)
+mic_de3 <- length(mic_degs3)
+x_values <- c(mic_de1, mic_de2, mic_de3)
+y_values <- c(concord_score1, concord_score2, concord_score3)
+mic_plot_data = data.frame(x_values, y_values)
+mic_x_label <- "DE genes from Limma"
+concordance_limma_plot <- concordance_vs_de_plot(mic_plot_data, mic_x_label)
+concordance_limma_plot
+
+# concordance score vs the number of DE genes from RNAseq.
+rna_de1 <- length(rna_degs1)
+rna_de2 <- length(rna_degs2)
+rna_de3 <- length(rna_degs3)
+x_values <- c(rna_de1, rna_de2, rna_de3)
+y_values <- c(concord_score1, concord_score2, concord_score3)
+rna_plot_data = data.frame(x_values, y_values)
+rna_x_label <- "DE genes from RNAseq"
+concordance_deseq_plot <- concordance_vs_de_plot(rna_plot_data, rna_x_label)
+concordance_deseq_plot
+
+```
+
+5. Subdivide the DE genes into “above-median” and “below-median” groups as in Figure 3 b+c for each of your sample groups. Compute the concordance of these separate groups of genes. Use the RNA-Seq results to determine median from the baseMean column in the DESeq2 results, which corresponds to the overall mean count of the gene across all samples in the comparison.
+
+Supplement:
+In section 6.5, you create 3 groups of DE genes: “all”, “above-median”, and “below-median”, following the instruction. For each treatment (toxin), you calculate the concordance score using “all the genes” (you already did it in 6.3), “above-median genes”, and “below-media genes”.
+
+```{r Part6 5 of 6}
+# Need to subdivide the DE genes into "all", "above_median" and "below_median"
+# rna data: rna_data1, rna_data2, rna_data3
+# mic data: mic_data1, mic_data2, mic_data3
+# Calculate the median value of the baseMean col of rna data
+median_rna_data1 <- median(rna_data1$baseMean)
+median_rna_data2 <- median(rna_data2$baseMean)
+median_rna_data3 <- median(rna_data3$baseMean)
+message(paste0(" RNAseq median value (3ME): "), median_rna_data1)
+message(paste0(" RNAseq median value (CLO): "), median_rna_data2)
+message(paste0(" RNAseq median value (CHL): "), median_rna_data3)
+
+#split the tables into below median and above median
+rna_below1 <- subset(rna_data1, baseMean <= median_rna_data1)
+rna_above1 <- subset(rna_data1, baseMean > median_rna_data1)
+rna_below2 <- subset(rna_data2, baseMean <= median_rna_data2)
+rna_above2 <- subset(rna_data2, baseMean > median_rna_data2)
+rna_below3 <- subset(rna_data3, baseMean <= median_rna_data3)
+rna_above3 <- subset(rna_data3, baseMean > median_rna_data3)
+
+#############
+# Calculate the median value of the AveExpr col of limma data
+median_mic_data1 <- median(mic_data1$AveExpr)
+median_mic_data2 <- median(mic_data2$AveExpr)
+median_mic_data3 <- median(mic_data3$AveExpr)
+message(paste0(" Limma median value (3ME): "), median_mic_data1)
+message(paste0(" Limma median value (CLO): "), median_mic_data2)
+message(paste0(" Limma median value (CHL): "), median_mic_data3)
+
+#split the tables into below median and above median
+mic_below1 <- subset(mic_data1, AveExpr <= median_mic_data1)
+mic_above1 <- subset(mic_data1, AveExpr > median_mic_data1)
+mic_below2 <- subset(mic_data2, AveExpr <= median_mic_data2)
+mic_above2 <- subset(mic_data2, AveExpr > median_mic_data2)
+mic_below3 <- subset(mic_data3, AveExpr <= median_mic_data3)
+mic_above3 <- subset(mic_data3, AveExpr > median_mic_data3)
+
+#######################
+# Now convert REFseq to genes:
+# For the microarray data, that is in the column $REFSEQ, 
+# And for the RNA data, that is in the column $X  
+de_mic_below1 <- refseq_to_gene(mic_below1$REFSEQ, refseq_affy_map)
+de_mic_below2 <- refseq_to_gene(mic_below2$REFSEQ, refseq_affy_map)
+de_mic_below3 <- refseq_to_gene(mic_below3$REFSEQ, refseq_affy_map)
+de_mic_above1 <- refseq_to_gene(mic_above1$REFSEQ, refseq_affy_map)
+de_mic_above2 <- refseq_to_gene(mic_above2$REFSEQ, refseq_affy_map)
+de_mic_above3 <- refseq_to_gene(mic_above3$REFSEQ, refseq_affy_map)
+message(paste0("Number of below-median micro array DE genes (3ME): ", length(de_mic_below1)))
+message(paste0("Number of below-median micro array DE genes (CLO): ", length(de_mic_below2)))
+message(paste0("Number of below-median micro array DE genes (CHL): ", length(de_mic_below3)))
+message(paste0("Number of above-median micro array DE genes (3ME): ", length(de_mic_above1)))
+message(paste0("Number of above-median micro array DE genes (CLO): ", length(de_mic_above2)))
+message(paste0("Number of above-median micro array DE genes (CHL): ", length(de_mic_above3)))
+
+de_rna_below1 <- refseq_to_gene(rna_below1$X, refseq_affy_map)
+de_rna_below2 <- refseq_to_gene(rna_below2$X, refseq_affy_map)
+de_rna_below3 <- refseq_to_gene(rna_below3$X, refseq_affy_map)
+de_rna_above1 <- refseq_to_gene(rna_above1$X, refseq_affy_map)
+de_rna_above2 <- refseq_to_gene(rna_above2$X, refseq_affy_map)
+de_rna_above3 <- refseq_to_gene(rna_above3$X, refseq_affy_map)
+message(paste0("Number of below-median rna DE genes (3ME): ", length(de_rna_below1)))
+message(paste0("Number of below-median rna DE genes (CLO): ", length(de_rna_below2)))
+message(paste0("Number of below-median rna DE genes (CHL): ", length(de_rna_below3)))
+message(paste0("Number of above-median rna DE genes (3ME): ", length(de_rna_above1)))
+message(paste0("Number of above-median rna DE genes (CLO): ", length(de_rna_above2)))
+message(paste0("Number of above-median rna DE genes (CHL): ", length(de_rna_above3)))
+
+
+#######################
+# Now we have above and below median data sets, lets find the genes that 
+# have the same DE directionality for above and below median genes.
+agree_above1 <- agreement(mic_above1, rna_above1)
+agree_above2 <- agreement(mic_above2, rna_above2)
+agree_above3 <- agreement(mic_above3, rna_above3)
+agree_below1 <- agreement(mic_below1, rna_below1)
+agree_below2 <- agreement(mic_below2, rna_below2)
+agree_below3 <- agreement(mic_below3, rna_below3)
+message(paste0("Number of above_median genes with same DE directionality (3ME): "), length(agree_above1))
+message(paste0("Number of above_median genes with same DE directionality (CLO): "), length(agree_above2))
+message(paste0("Number of above_median genes with same DE directionality (CHL): "), length(agree_above3))
+message(paste0("Number of below_median genes with same DE directionality (3ME): "), length(agree_below1))
+message(paste0("Number of below_median genes with same DE directionality (CLO): "), length(agree_below2))
+message(paste0("Number of below_median genes with same DE directionality (CHL): "), length(agree_below3))
+
+
+#############
+# Calculate concordance score from the above_median of genes in each sample:
+N  <-  30000    #total number of genes in the genome (30000)
+a0 <-  length(agree_above1)    #genes that have the same DE directionality for (3ME)
+a1 <-  length(de_rna_above1)  #number of above_median genes in RNA for (3ME)
+a2 <-  length(de_mic_above1)  #number of above_median genes in Mic for (3ME)
+above1 <- calculate_concordance_score(a0, a1, a2, N)
+
+a0 <-  length(agree_above2)    #genes that have the same DE directionality for (CLO)
+a1 <-  length(de_rna_above2)  #number of above_median genes in RNA for (CLO)
+a2 <-  length(de_mic_above2)  #number of above_median genes in Mic for (CLO)
+above2 <- calculate_concordance_score(a0, a1, a2, N)
+
+a0 <-  length(agree_above3)    #genes that have the same DE directionality for (CHL)
+a1 <-  length(de_rna_above3)  #number of above_median genes in RNA for (CHL)
+a2 <-  length(de_mic_above3)  #number of above_median genes in Mic for (CHL)
+above3 <- calculate_concordance_score(a0, a1, a2, N)
+
+# Calculate concordance score for the below_median of genes in each sample:
+N  <-  30000    #total number of genes in the genome (30000)
+b0 <-  length(agree_below1)    #genes that have the same DE directionality for (3ME)
+b1 <-  length(de_rna_below1)  #number of above_median genes in RNA for (3ME)
+b2 <-  length(de_mic_below1)  #number of above_median genes in Mic for (3ME)
+below1 <- calculate_concordance_score(b0, b1, b2, N)
+
+b0 <-  length(agree_below2)    #genes that have the same DE directionality for (CLO)
+b1 <-  length(de_rna_below2)  #number of above_median genes in RNA for (CLO)
+b2 <-  length(de_mic_below2)  #number of above_median genes in Mic for (CLO)
+below2 <- calculate_concordance_score(b0, b1, b2, N)
+
+b0 <-  length(agree_below3)    #genes that have the same DE directionality for (CHL)
+b1 <-  length(de_rna_below3)  #number of above_median genes in RNA for (CHL)
+b2 <-  length(de_mic_below3)  #number of above_median genes in Mic for (CHL)
+below3 <- calculate_concordance_score(b0, b1, b2, N)
+
+message(paste0("Concordance Score for  above_median genes(3ME): "), above1)
+message(paste0("Concordance Score for  above_median genes(CLO): "), above2)
+message(paste0("Concordance Score for  above_median genes(CHL): "), above3)
+message(paste0("Concordance Score for  below_median genes(3ME): "), below1)
+message(paste0("Concordance Score for  below_median genes(CLO): "), below2)
+message(paste0("Concordance Score for  below_median genes(CHL): "), below3)
+
+#Concordance Score using all genes for 3ME = concord_score1, CLO = concord_score2, CHL = concord_score3
+all1 <- concord_score1
+all2 <- concord_score2
+all3 <- concord_score3
+
+CS_all <- c(all1, all2, all3)
+#Concordance Score for above_median genes for 3ME = CS_above1, CLO = CS_above2, CHL = CS_above3
+CS_above_median <- c(above1, above2, above3)
+#Concordance Score for below_median genes for 3ME = CS_below1, CLO = CS_below2, CHL = CS_below3
+CS_below_median <- c(below1, below2, below3)
+
+toxins <- c("3ME", "CLO", "CHL")
+concordance_data = data.frame(toxins, CS_all, CS_above_median, CS_below_median)
+
+```
+6. Produce a bar plot combining overall concordance measures you obtained for the overall DE gene list and the above- and below-median subsets. Challenge: Try to recreate the figure, by computing concordance for increasing subsets of genes ranked by fold change descending. You will have to decide how to handle the case of having different numbers of DE genes between platforms.
+
+Supplement:
+In section 6.6, the bar plot will have 3 groups (3 treatment/toxins). For each treatment/toxin you have 3 bars, indicating the concordance score from “all”, “above-median”, and “below-median” DE genes.
+
+The challenge plot for 6.6 (optional): Try to recreate Figure 3b 3c. Basically, as the number of DE genes increases (according to the fold change), keep calculating the concordance score, and plot them. Figure 3b 3c are plotting all toxins while you will be plotting 3 toxins.
+
+
+```{r Part6 6 of 6}
+
+message(paste0("Concordance Score for 'all' genes(3ME): ", all1))
+message(paste0("Concordance Score for 'all'genes(CLO): ", all2))
+message(paste0("Concordance Score for 'all' genes(CHL): ", all3))
+message(paste0("Concordance Score for 'above_median' genes(3ME): ", above1))
+message(paste0("Concordance Score for 'above_median' genes(CLO): ", above2))
+message(paste0("Concordance Score for 'above_median' genes(CHL): ", above3))
+message(paste0("Concordance Score for 'below_median' genes(3ME): ", below1))
+message(paste0("Concordance Score for 'below_median' genes(CLO): ", below2))
+message(paste0("Concordance Score for 'below_median' genes(CHL): ", below3))
+
+        
+data <- data.frame(genes=rep(c("all", "above_median", "below_median"),each=3),
+                     toxins=rep(c("3ME", "CLO", "CHL"),3),
+                     #CS=c(all1, above1, below1, all2, above2, below2, all3, above3, below3))
+                     CS=c(all1, all2, all3, above1, above2, above3, below1, below2, below3))
+
+plot <-  ggplot(data, aes(x=reorder(genes, -CS), y=CS, fill=toxins)) + 
+         geom_bar(stat="identity", position=position_dodge()) + 
+         scale_y_continuous ( labels = scales ::percent) +
+         xlab("Toxins") + ylab("Concordance Score") +
+         ggtitle("Concordance Measures for Above Median, Below Median and Overall DE Genes")
+
+plot
+
+```
