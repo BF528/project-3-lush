@@ -9,6 +9,13 @@ Athena Mustakis, Evan Holmes, Navin Ramanan
 # Repository Contents
 Files: 
 
+run_limma.R
+
+-contains the functions necessary for parts 5 and 6 of the project (data analyst role)
+
+report.RMD
+
+-- contains markdown chunks used to run the aformentioned functions and create tables/plots
 
 multiqc.qsub 
 
