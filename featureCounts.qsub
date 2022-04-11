@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#$ -P bf528
+#$ -cwd
+#$ -pe omp 16
+
+source /etc/bashrc
+#load featureCounts
+module load subread
+#define path to annotation file
+GTF=/project/bf528/project_3/reference/rn4_refGene_20180308.gtf # path to gtf annotation
+#allow user input file
+VAR1=$1
+#get part of output filename from input filename
+VAR2=$(basename "$VAR1" .out.bam)
+OUT="${VAR2}.counts.txt" # output counts file
+#execute featureCounts
+featureCounts -T 16 -a $GTF -o $OUT $1
