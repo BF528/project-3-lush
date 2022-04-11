@@ -15,7 +15,11 @@ run_limma.R
 
 report.RMD
 
--- contains markdown chunks used to run the aformentioned functions and create tables/plots
+-- contains markdown chunks used to run the aformentioned functions and create tables/plots (data analyst role)
+
+programmer.R
+
+--contains code necessary for programmer role
 
 multiqc.qsub 
 
