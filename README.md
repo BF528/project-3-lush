@@ -9,13 +9,13 @@ Athena Mustakis, Evan Holmes, Navin Ramanan
 # Repository Contents
 Files: 
 
-run_limma.R
+analyst_run_limma.R
 
 -contains the functions necessary for parts 5 and 6 of the project (data analyst role)
 
-report.RMD
+analyst.RMD
 
--- contains markdown chunks used to run the aformentioned functions and create tables/plots (data analyst role)
+-- contains markdown chunks used to run the functions in analyst_run_limma.R and create tables/plots (data analyst role)
 
 programmer.R
 
